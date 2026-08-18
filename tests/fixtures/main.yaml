@@ -1,0 +1,21 @@
+substitutions:
+  device_name: voice-assistant
+  wifi_ssid: MyNetwork
+  friendly_name: "Voice PE"
+
+esphome:
+  name: ${device_name}
+  friendly_name: $friendly_name
+
+wifi: !include included.yaml
+
+sensor:
+  - platform: template
+    name: "${friendly_name} Uptime"
+    lambda: !lambda |-
+      return id(uptime_sensor).state / 60.0;
+
+light:
+  - id: !extend led_ring
+    effects:
+      - pulse:

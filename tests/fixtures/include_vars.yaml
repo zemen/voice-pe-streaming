@@ -1,0 +1,4 @@
+button:
+  - platform: template
+    name: "${button_name}"
+    id: "${button_id}"

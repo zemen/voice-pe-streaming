@@ -1,0 +1,43 @@
+# Per-device wrapper for a Voice PE running the streaming wake word firmware.
+#
+# Copy this file once per Voice PE (e.g. voice-bedroom.yaml, voice-kitchen.yaml).
+# Only the two substitutions at the top need to change between devices.
+# Everything else (logic, LED effects, streaming WW switch, ...) lives in
+# voice-pe-streaming.yaml and is shared across the fleet — edit there and the
+# change reaches every wrapper on next OTA push.
+#
+# First-time provisioning (USB):
+#   esphome run voice-bedroom.yaml
+#
+# Subsequent updates (OTA):
+#   esphome run voice-bedroom.yaml
+#   (ESPHome auto-discovers the device via mDNS; or pass --device IP.)
+#
+# To add a new Voice PE:
+#   1. cp voice-device.example.yaml voice-<location>.yaml
+#   2. Edit the two substitutions below.
+#   3. esphome run voice-<location>.yaml (with the new device on USB first time).
+
+substitutions:
+  name: voice-bedroom
+  friendly_name: Voice Bedroom
+
+packages:
+  streaming: !include voice-pe-streaming.yaml
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: false
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password

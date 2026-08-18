@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.coverage*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg
+
+# Local configuration and secrets
+.env
+*.pem
+*.key
+config.local.yaml
+secrets.yaml
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Local development artifacts
+.sisyphus/
+wakeword_workspace/
+chatgpt*.md
+models/backups/
+LIVEKIT_WAKEWORD_ANALYSIS.md
+patches/
+uv.lock

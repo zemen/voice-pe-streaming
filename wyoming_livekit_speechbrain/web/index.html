@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <title>Wake Word Pipeline</title>
+  <link rel="stylesheet" href="static/styles.css">
+</head>
+<body>
+  <header class="app-header" role="banner">
+    <div class="app-header-inner">
+      <div class="app-title-group">
+        <span class="app-glyph" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </span>
+        <h1 class="app-title">Wake Word Pipeline</h1>
+        <span class="app-version" id="version-display">v…</span>
+      </div>
+      <div class="app-actions">
+        <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle theme">
+          <svg class="theme-icon theme-icon-dark" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg class="theme-icon theme-icon-light" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tab-bar" role="tablist" aria-label="Sections">
+    <button class="tab-button active" type="button" role="tab" data-tab="enroll" id="tab-button-enroll" aria-controls="tab-enroll" aria-selected="true">
+      <span class="tab-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <line x1="19" y1="8" x2="19" y2="14"></line>
+          <line x1="22" y1="11" x2="16" y2="11"></line>
+        </svg>
+      </span>
+      <span>Enroll</span>
+    </button>
+    <button class="tab-button" type="button" role="tab" data-tab="debug" id="tab-button-debug" aria-controls="tab-debug" aria-selected="false" tabindex="-1">
+      <span class="tab-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 17 9 11 13 15 21 7"></polyline>
+          <polyline points="14 7 21 7 21 14"></polyline>
+        </svg>
+      </span>
+      <span>Debug</span>
+    </button>
+    <button class="tab-button" type="button" role="tab" data-tab="samples" id="tab-button-samples" aria-controls="tab-samples" aria-selected="false" tabindex="-1">
+      <span class="tab-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 5h18"></path>
+          <path d="M3 12h18"></path>
+          <path d="M3 19h12"></path>
+          <circle cx="19" cy="19" r="2.5"></circle>
+        </svg>
+      </span>
+      <span>Samples</span>
+    </button>
+  </nav>
+
+  <main class="app-main" id="app-main">
+
+    <section class="tab-panel active" id="tab-enroll" role="tabpanel" aria-labelledby="tab-button-enroll">
+
+      <div class="status-banner card" id="enroll-status-banner" role="status">
+        <div class="banner-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="banner-text">
+          <strong id="banner-title">Loading speaker status…</strong>
+          <span id="banner-detail" class="banner-detail">Connecting to the wake word service.</span>
+        </div>
+      </div>
+
+      <section class="card" aria-labelledby="speakers-heading">
+        <header class="card-header">
+          <h2 id="speakers-heading">Enrolled Speakers</h2>
+          <button class="text-button" type="button" id="refresh-speakers">Refresh</button>
+        </header>
+        <div class="card-body">
+          <div class="speakers-table" id="speakers-list">
+            <div class="empty-state">No speakers loaded yet.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="record-heading">
+        <header class="card-header">
+          <h2 id="record-heading">Record New Samples</h2>
+          <span class="card-hint" id="record-hint">Aim for 3 – 5 clear samples in your normal speaking voice.</span>
+        </header>
+        <div class="card-body">
+
+          <div class="field">
+            <label for="speaker-name">Speaker name</label>
+            <input type="text" id="speaker-name" autocomplete="off" spellcheck="false"
+                   placeholder="e.g. alice" maxlength="32"
+                   aria-describedby="speaker-name-help speaker-name-error">
+            <small class="field-help" id="speaker-name-help">Letters, digits, underscores and dashes. Max 32 characters.</small>
+            <small class="field-error" id="speaker-name-error" hidden></small>
+          </div>
+
+          <div class="field mic-source-field">
+            <label>Audio source</label>
+            <div class="segmented-control" id="mic-source-control" role="tablist" aria-label="Microphone source">
+              <button type="button" class="seg-button active" data-source="browser" role="tab" aria-selected="true">Browser mic</button>
+              <button type="button" class="seg-button" data-source="voice-pe" role="tab" aria-selected="false" disabled>Voice PE</button>
+            </div>
+            <select id="enroll-vpe-select" class="vpe-device-select" hidden aria-label="Voice PE device">
+              <option value="">(no active devices)</option>
+            </select>
+            <small class="field-help" id="mic-source-hint" hidden>No active Voice PE devices. Trigger one (say the wake word) so it appears here.</small>
+          </div>
+
+          <div class="record-row">
+            <button id="record-btn" class="primary-button record-button" type="button" aria-pressed="false">
+              <span class="rec-dot" aria-hidden="true"></span>
+              <span class="rec-label" id="record-btn-label">Start Recording Sample</span>
+            </button>
+            <div class="record-countdown" id="record-countdown" aria-live="polite">5.0s</div>
+          </div>
+
+          <div class="vu-row" aria-label="Microphone activity">
+            <div class="vu-meter" aria-hidden="true">
+              <div class="vu-bar" id="vu-bar"></div>
+            </div>
+            <canvas class="live-waveform" id="live-waveform" width="700" height="56" aria-hidden="true"></canvas>
+          </div>
+
+          <div class="samples-list" id="samples-list">
+            <div class="empty-state">No samples yet. Press <strong>Start Recording Sample</strong> to capture your voice.</div>
+          </div>
+
+          <div class="quality-row" id="quality-row" hidden>
+            <span class="quality-dot" id="quality-dot" aria-hidden="true"></span>
+            <span class="quality-label">Sample consistency:</span>
+            <span class="quality-value" id="quality-value">—</span>
+            <span class="quality-hint" id="quality-hint"></span>
+          </div>
+
+          <div class="actions-row">
+            <button id="enroll-btn" class="primary-button" type="button" disabled>
+              <span id="enroll-btn-label">Enroll Speaker</span>
+            </button>
+            <button id="clear-samples-btn" class="ghost-button" type="button" disabled>Clear Samples</button>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="verify-heading">
+        <header class="card-header">
+          <h2 id="verify-heading">Test Verification</h2>
+          <span class="card-hint">Record 3 seconds and see how it scores against every enrolled speaker.</span>
+        </header>
+        <div class="card-body">
+          <div class="record-row">
+            <button id="verify-record-btn" class="primary-button" type="button">
+              <span class="rec-dot" aria-hidden="true"></span>
+              <span id="verify-btn-label">Record &amp; Verify</span>
+            </button>
+            <div class="record-countdown" id="verify-countdown" aria-live="polite">3.0s</div>
+          </div>
+          <div class="verify-results" id="verify-results">
+            <div class="empty-state">Run a test to see verification scores.</div>
+          </div>
+        </div>
+      </section>
+
+    </section>
+
+    <section class="tab-panel" id="tab-debug" role="tabpanel" aria-labelledby="tab-button-debug" hidden>
+
+      <section class="card source-picker-card" aria-labelledby="source-heading">
+        <header class="card-header">
+          <h2 id="source-heading">Audio source</h2>
+          <span class="card-hint" id="source-claim-note" hidden>Voice PE Wyoming pipeline paused while debugging.</span>
+        </header>
+        <div class="card-body">
+          <div class="source-picker-row">
+            <label class="source-option">
+              <input type="radio" name="debug-source" value="browser" id="debug-source-browser" checked>
+              <span>Browser microphone</span>
+            </label>
+            <label class="source-option">
+              <input type="radio" name="debug-source" value="voice-pe" id="debug-source-voicepe">
+              <span>Voice PE</span>
+            </label>
+            <select id="debug-device-select" class="vpe-device-select" disabled aria-label="Voice PE device">
+              <option value="">(no active devices)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="card stream-header">
+        <header class="card-header">
+          <div class="status-strip">
+            <span class="status-dot" id="ws-status-dot" data-status="idle" aria-hidden="true"></span>
+            <span class="status-label" id="ws-status-label">Idle — press Start to stream microphone audio.</span>
+          </div>
+          <div class="status-actions">
+            <button id="debug-toggle" class="primary-button" type="button">
+              <span class="rec-dot" aria-hidden="true"></span>
+              <span id="debug-toggle-label">Start Streaming</span>
+            </button>
+          </div>
+        </header>
+      </section>
+
+      <section class="card" aria-labelledby="ww-chart-heading" id="score-chart-card">
+        <header class="card-header">
+          <h2 id="ww-chart-heading">Wake-Word Scores</h2>
+          <div class="chart-legend" id="chart-legend"></div>
+        </header>
+        <div class="card-body">
+          <div class="chart-stats">
+            <span class="chip">
+              <span class="chip-label">Latest</span>
+              <strong id="latest-score">—</strong>
+            </span>
+            <span class="chip">
+              <span class="chip-label">Fired</span>
+              <strong id="latest-keyword">—</strong>
+            </span>
+            <span class="chip">
+              <span class="chip-label">Threshold</span>
+              <strong id="threshold-display">0.50</strong>
+            </span>
+            <span class="chip">
+              <span class="chip-label">Interval</span>
+              <strong id="interval-display">0.50s</strong>
+            </span>
+          </div>
+          <canvas id="score-chart" class="score-chart" width="900" height="220"></canvas>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="speaker-panel-heading">
+        <header class="card-header">
+          <h2 id="speaker-panel-heading">Speaker Verification</h2>
+          <button class="text-button" type="button" id="verify-now-btn">Verify now</button>
+        </header>
+        <div class="card-body">
+          <div class="speaker-bars" id="speaker-bars">
+            <div class="empty-state">No detections yet. Speak the wake word or press <em>Verify now</em>.</div>
+          </div>
+          <div class="threshold-info">
+            <span class="legend-swatch swatch-threshold" aria-hidden="true"></span>
+            Threshold <strong id="speaker-threshold-display">0.25</strong> · Best match <strong id="best-match-display">—</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="audio-heading">
+        <header class="card-header">
+          <h2 id="audio-heading">Audio Input</h2>
+          <span class="card-hint" id="debug-audio-info">Microphone idle</span>
+        </header>
+        <div class="card-body">
+          <div class="vu-meter large" aria-label="Microphone level">
+            <div class="vu-bar" id="debug-vu-bar"></div>
+          </div>
+        </div>
+      </section>
+
+    </section>
+
+    <section class="tab-panel" id="tab-samples" role="tabpanel" aria-labelledby="tab-button-samples" hidden>
+
+      <section class="card" aria-labelledby="capture-vpe-heading">
+        <header class="card-header">
+          <h2 id="capture-vpe-heading">Capture from Voice PE</h2>
+          <span class="card-hint" id="vpe-session-count">— active session(s)</span>
+        </header>
+        <div class="card-body">
+          <div class="device-list" id="device-list">
+            <div class="empty-state">Loading device sessions…</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="samples-heading">
+        <header class="card-header">
+          <h2 id="samples-heading">Captured Samples</h2>
+          <span class="card-hint" id="samples-size-info">— / — max</span>
+        </header>
+        <div class="card-body">
+          <div class="samples-toolbar">
+            <div class="filter-pills" id="samples-filter-pills" role="tablist" aria-label="Filter samples">
+              <button class="pill active" type="button" data-filter="all" role="tab" aria-selected="true">All</button>
+              <button class="pill" type="button" data-filter="fp" role="tab" aria-selected="false">False Positives</button>
+              <button class="pill" type="button" data-filter="tp" role="tab" aria-selected="false">True Positives</button>
+              <button class="pill" type="button" data-filter="unlabeled" role="tab" aria-selected="false">Unlabeled</button>
+            </div>
+            <div class="samples-toolbar-actions">
+              <a class="text-button download-link" id="download-fine-tune-link" href="api/samples/fine-tune.zip" download>Download fine-tune dataset</a>
+              <a class="text-button download-link" id="download-fps-link" href="api/samples/zip?label=fp" download>FPs only</a>
+              <a class="text-button download-link" id="download-tps-link" href="api/samples/zip?label=tp" download>TPs only</a>
+              <button class="text-button" type="button" id="refresh-samples-btn">Refresh</button>
+            </div>
+          </div>
+          <div class="bulk-action-bar" id="bulk-action-bar" hidden role="region" aria-label="Bulk actions on selected samples">
+            <span class="bulk-count" id="bulk-action-count">0 selected</span>
+            <button class="text-button" type="button" id="select-all-btn">Select all (visible)</button>
+            <button class="text-button" type="button" id="clear-selection-btn">Clear</button>
+            <span class="bulk-spacer"></span>
+            <button class="text-button" type="button" id="bulk-mark-unassigned">Mark —</button>
+            <button class="text-button" type="button" id="bulk-mark-tp">Mark TP</button>
+            <button class="text-button" type="button" id="bulk-mark-fp">Mark FP</button>
+            <button class="text-button danger" type="button" id="bulk-delete">Delete</button>
+          </div>
+          <div class="server-samples-list" id="server-samples-list">
+            <div class="empty-state">Loading samples…</div>
+          </div>
+          <div class="load-more-row" id="load-more-row" hidden>
+            <button class="ghost-button" type="button" id="load-more-samples-btn">Load more</button>
+          </div>
+        </div>
+      </section>
+
+    </section>
+  </main>
+
+  <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
+  <div class="visually-hidden" id="status-region" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="static/app.js"></script>
+</body>
+</html>

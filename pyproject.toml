@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voice-pe-firmware"
+version = "0.2.0"
+description = "Custom firmware for Home Assistant Voice PE with streaming wake word (LiveKit) and speaker verification (SpeechBrain)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "zemen"}]
+keywords = ["esphome", "wyoming", "voice", "wake-word", "livekit", "speechbrain", "voice-match"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "voluptuous>=0.13.0",
+    "livekit-wakeword>=0.2.0",
+    "speechbrain>=1.0.0",
+    "torch>=2.0",
+    "numpy>=1.24",
+    "onnxruntime>=1.17.0",
+    "wyoming>=1.0.0",
+    "aiohttp>=3.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/home-assistant/voice-pe-firmware"
+Repository = "https://github.com/home-assistant/voice-pe-firmware.git"
+Issues = "https://github.com/home-assistant/voice-pe-firmware/issues"
+
+[tool.setuptools]
+packages = ["esphome_yaml_tools", "wyoming_livekit_speechbrain", "voice_pe_streaming"]
+
+[tool.setuptools.package-data]
+voice_pe_streaming = ["docs/.gitkeep"]
+wyoming_livekit_speechbrain = ["web/*.html", "web/*.css", "web/*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-v --strict-markers"
+markers = [
+    "asyncio: marks tests as async (deselect with '-m \"not asyncio\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312", "py313"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "W", "I", "N", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false

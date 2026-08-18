@@ -1,0 +1,12 @@
+{
+  "domain": "voice_pe_speaker",
+  "name": "Voice PE Speaker",
+  "version": "0.1.0",
+  "config_flow": true,
+  "iot_class": "local_push",
+  "dependencies": [],
+  "requirements": [],
+  "documentation": "https://github.com/zemen/voice-pe-streaming",
+  "issue_tracker": "https://github.com/zemen/voice-pe-streaming/issues",
+  "codeowners": ["@zemen"]
+}
