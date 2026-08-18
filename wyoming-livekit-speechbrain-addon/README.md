@@ -6,7 +6,7 @@ Fully offline once the SpeechBrain model is cached on first run. No access keys,
 
 ## First-time setup
 
-The add-on bundles the **sputnik** wake word model. On first start, if `/share/wakewords/` contains no models, the bundled `sputnik.onnx` is seeded there automatically. The default sensitivity `0.37` is the model's eval-derived optimal threshold (see `sputnik_eval.json`).
+The add-on bundles the **sputnik** wake word model. On first start, if `/share/wakewords/` contains no models, the bundled `sputnik.onnx` is seeded there automatically. The default sensitivity `0.5` is the model's eval-derived optimal threshold (see `sputnik_eval.json`).
 
 1. Start the add-on. Watch the log for `Wake words: sputnik`.
 2. In Home Assistant: **Settings -> Devices & Services -> Add Integration -> Wyoming Protocol** -> Host: `localhost` (same host) or `homeassistant.local`, Port: `10400`.
@@ -42,7 +42,7 @@ When speaker verification is enabled, the server compares the speaker before and
 |---|---|---|
 | `wake_word_models` | `[/share/wakewords/sputnik.onnx]` | Required. Paths to ONNX wake-word classifiers (under `/share/`). |
 | `wake_words` | `[sputnik]` | Optional labels (defaults to model file stem if omitted). Pairs 1:1 with `wake_word_models`. |
-| `sensitivity` | `0.37` | Detection threshold 0.0-1.0, applied to every wake-word model. Default matches the bundled model's eval-derived optimal threshold. Same value applies to all wake words; for per-model sensitivity, invoke the addon manually with repeated `--sensitivity` flags. |
+| `sensitivity` | `0.5` | Detection threshold 0.0-1.0, applied to every wake-word model. Default matches the bundled model's eval-derived optimal threshold. Same value applies to all wake words; for per-model sensitivity, invoke the addon manually with repeated `--sensitivity` flags. |
 | `save_sample_threshold` | `0.25` | Second, lower threshold (0.0-1.0 or omit/null to disable). When the classifier scores in `[save_sample_threshold, sensitivity)`, the 2 s window is persisted to the sample store with `source="auto-below-threshold"` WITHOUT firing a detection. Mines hard negatives + quiet TPs near the decision boundary for fine-tuning. Lower = more captures + more storage + more manual labeling. Default 0.25 is conservative on a trained sputnik model. |
 | `predict_interval_seconds` | `0.5` | Minimum seconds between `WakeWordModel.predict()` calls. Lower = lower detection latency, higher CPU. `0.0` disables throttling (predict on every 80 ms frame ≈ 12 calls/sec). |
 | `enable_speaker_verification` | `false` | Toggle SpeechBrain ECAPA verification. |

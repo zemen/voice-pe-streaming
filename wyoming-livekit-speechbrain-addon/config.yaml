@@ -1,5 +1,5 @@
 name: Wyoming LiveKit + SpeechBrain
-version: "0.12.0"
+version: "0.12.1"
 slug: wyoming_livekit_speechbrain
 description: Streaming wake word (livekit-wakeword) + offline speaker verification (SpeechBrain ECAPA-TDNN) over Wyoming.
 url: https://github.com/zemen/voice-pe-streaming
@@ -26,7 +26,7 @@ map:
   - share:rw
   - config:ro
 options:
-  sensitivity: 0.37
+  sensitivity: 0.5
   save_sample_threshold: 0.25
   predict_interval_seconds: 0.5
   enable_speaker_verification: false
