@@ -54,13 +54,22 @@ pipeline → conversation agent → Instructions):
 
 ```jinja
 {% set last = states.sensor.last_speaker %}
+{% set detected = state_attr('sensor.last_speaker', 'detected_at') %}
 {% if last is not none and last.state not in ('unknown', 'unavailable')
-   and (now() - last.last_changed).total_seconds() < 30 %}
+   and detected is not none
+   and (now() - as_datetime(detected)).total_seconds() < 30 %}
 The person speaking to you right now is {{ last.state }}.
 {% endif %}
 ```
 
 The 30-second freshness window prevents stale attribution on typed chats or delayed queries.
+
+> **Why `detected_at` and not `last_changed`?** `last_changed` only updates when the
+> sensor's *state value* changes — if the same speaker talks twice in a row, it stays
+> frozen at the first detection. `detected_at` is the wall-clock timestamp from the
+> add-on's detection event, updated on every wake-word fire regardless of who spoke.
+> It is also immune to HA restarts and WebSocket reconnects, which can silently
+> refresh `last_changed`/`last_updated` without a real detection.
 
 ## Development
 
