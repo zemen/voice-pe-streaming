@@ -46,9 +46,9 @@ class VoicePESpeakerClient:
         self.detection: SpeakerDetection | None = None
 
     def start(self) -> None:
-        """Start the long-running WebSocket task."""
+        """Start the never-ending WebSocket loop as a background task (a tracked task blocks HA startup)."""
         if self._task is None or self._task.done():
-            self._task = self._hass.async_create_task(
+            self._task = self._hass.async_create_background_task(
                 self._run(), f"{self.__class__.__name__} event stream"
             )
 

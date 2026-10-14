@@ -132,3 +132,14 @@ def test_detection_fires_listener_callbacks() -> None:
     )
     first.assert_called_once_with()
     assert second.call_count == 2
+
+
+def test_start_uses_background_task_so_startup_is_not_blocked() -> None:
+    hass = MagicMock()
+    client = VoicePESpeakerClient(hass, "example.local", 10401)
+
+    client.start()
+
+    hass.async_create_background_task.assert_called_once()
+    hass.async_create_task.assert_not_called()
+    hass.async_create_background_task.call_args.args[0].close()
