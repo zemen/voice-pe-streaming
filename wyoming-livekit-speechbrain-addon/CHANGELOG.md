@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.3
+
+- Fix: 0.13.1/0.13.2 still crashed on upgraded installs because the image kept the old add-on
+  code. The Dockerfile installed `git+…@master` on a line that never changed, so Docker
+  reused the cached layer from the first build. The image now installs the git tag matching
+  the add-on version (`v<version>`), forced fresh, and logs the installed version at build time.
+- Pin `speechbrain==1.0.3`: newer releases require torch>=2.7 and silently replaced the CPU
+  torch with a ~3 GB CUDA build.
+
 ## 0.13.2
 
 - Existing installs now get the new bundled `sputnik.onnx`: on start, a

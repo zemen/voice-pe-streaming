@@ -33,11 +33,20 @@ RUN python3 -m pip install --break-system-packages \
         onnxruntime \
         wyoming \
         livekit-wakeword \
-        speechbrain \
+        "speechbrain==1.0.3" \
         huggingface_hub \
         aiohttp
-RUN python3 -m pip install --break-system-packages --no-deps \
-        "git+https://github.com/zemen/voice-pe-streaming@master"
+# speechbrain>=1.1 requires torch>=2.7, which silently replaced the CPU torch above with a
+# ~3 GB CUDA build. 1.0.3 keeps torch 2.4 CPU.
+
+# Install the add-on code for THIS add-on version. BUILD_VERSION (passed by the Supervisor)
+# changes every release, so Docker can't reuse a cached layer holding older code, which
+# is what happened with a fixed "@master" URL.
+ARG BUILD_VERSION=master
+RUN REF="v${BUILD_VERSION}"; [ "${BUILD_VERSION}" = "master" ] && REF=master; \
+    python3 -m pip install --break-system-packages --no-deps --no-cache-dir --force-reinstall \
+        "git+https://github.com/zemen/voice-pe-streaming@${REF}" \
+    && python3 -c "import wyoming_livekit_speechbrain as w; print('installed', w.ADDON_VERSION)"
 
 COPY sputnik.onnx /app/models/sputnik.onnx
 COPY run.sh /run.sh
