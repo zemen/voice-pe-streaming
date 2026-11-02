@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.2
+
+- Existing installs now get the new bundled `sputnik.onnx`: on start, a
+  `/share/wakewords/sputnik.onnx` that is byte-identical to an earlier bundled release is
+  replaced (old file kept as `sputnik.onnx.bak-<hash>`). Custom models are never touched.
+
 ## 0.13.1
 
 - Fix: 0.13.0 failed to start with speaker verification enabled

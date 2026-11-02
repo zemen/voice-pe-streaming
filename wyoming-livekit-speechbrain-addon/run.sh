@@ -32,6 +32,25 @@ if ! ls "$WAKEWORDS_DIR"/*.onnx >/dev/null 2>&1 && [ -f /app/models/sputnik.onnx
     cp /app/models/sputnik.onnx "$WAKEWORDS_DIR/sputnik.onnx"
 fi
 
+# Upgrade a previously *bundled* sputnik.onnx to the one shipped with this version.
+# Only files byte-identical to an earlier bundled release are replaced (a backup is kept);
+# a custom model the user dropped in under the same name is never touched.
+OLD_BUNDLED_SHA256="c2d69b4039ea786f45e73d52eb12cc58fa9c2a52ab02637e53608348c7e188cb 0e1930ef170c8726fa8303c7d8f047d4010810d04967ab3f717c2c19e05a8bf8"
+if [ -f "$WAKEWORDS_DIR/sputnik.onnx" ] && [ -f /app/models/sputnik.onnx ]; then
+    CUR=$(sha256sum "$WAKEWORDS_DIR/sputnik.onnx" | cut -d' ' -f1)
+    NEW=$(sha256sum /app/models/sputnik.onnx | cut -d' ' -f1)
+    if [ "$CUR" != "$NEW" ]; then
+        for OLD in $OLD_BUNDLED_SHA256; do
+            if [ "$CUR" = "$OLD" ]; then
+                echo "INFO: upgrading bundled sputnik.onnx (backup: sputnik.onnx.bak-${CUR%"${CUR#????????}"})" >&2
+                cp "$WAKEWORDS_DIR/sputnik.onnx" "$WAKEWORDS_DIR/sputnik.onnx.bak-${CUR%"${CUR#????????}"}"
+                cp /app/models/sputnik.onnx "$WAKEWORDS_DIR/sputnik.onnx"
+                break
+            fi
+        done
+    fi
+fi
+
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export ONNXRUNTIME_INTRA_OP_NUM_THREADS=1

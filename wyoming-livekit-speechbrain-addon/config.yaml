@@ -1,5 +1,5 @@
 name: Wyoming LiveKit + SpeechBrain
-version: "0.13.1"
+version: "0.13.2"
 slug: wyoming_livekit_speechbrain
 description: Streaming wake word (livekit-wakeword) + offline speaker verification (WeSpeaker CAM++) over Wyoming.
 url: https://github.com/zemen/voice-pe-streaming
