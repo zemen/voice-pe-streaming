@@ -1,6 +1,6 @@
 """Wyoming LiveKit + SpeechBrain integration for Voice PE."""
 
-ADDON_VERSION = "0.12.0"
+ADDON_VERSION = "0.13.1"
 
 from .buffer import MidSentenceDetector, RingBuffer, RingBufferConfig
 from .enrollment import enroll_speaker

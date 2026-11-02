@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.1
+
+- Fix: 0.13.0 failed to start with speaker verification enabled
+  (`InferenceSession.__init__() got multiple values for argument 'sess_options'`).
+  The process-wide single-thread ONNX Runtime patch now respects session options passed
+  positionally, and the CAM++ session passes them by keyword. Regression test added.
+
 ## 0.13.0
 
 - New bundled `sputnik.onnx`, retrained with real household wake-word clips (positives and

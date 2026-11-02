@@ -23,7 +23,9 @@ try:
     _ort_original_init = _ort.InferenceSession.__init__
 
     def _ort_single_thread_init(self, *args, **kwargs):
-        if "sess_options" not in kwargs:
+        # sess_options may arrive positionally (2nd arg) or by keyword; only inject a
+        # single-thread default when the caller passed neither.
+        if "sess_options" not in kwargs and len(args) < 2:
             opts = _ort.SessionOptions()
             opts.intra_op_num_threads = 1
             opts.inter_op_num_threads = 1

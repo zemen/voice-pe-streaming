@@ -59,7 +59,9 @@ class SpeakerEmbedder:
             so = ort.SessionOptions()
             so.intra_op_num_threads = 1
             so.inter_op_num_threads = 1
-            self._session = ort.InferenceSession(path, so, providers=["CPUExecutionProvider"])
+            self._session = ort.InferenceSession(
+                path, sess_options=so, providers=["CPUExecutionProvider"]
+            )
             self._input = self._session.get_inputs()[0].name
         else:
             from speechbrain.inference.speaker import SpeakerRecognition
