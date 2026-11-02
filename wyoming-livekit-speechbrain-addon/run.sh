@@ -11,7 +11,7 @@ if [ ! -f "$CONFIG_PATH" ]; then
 fi
 
 ENABLE_SPK=$(jq -r '.enable_speaker_verification // false' "$CONFIG_PATH")
-SPK_THRESHOLD=$(jq -r '.speaker_threshold // 0.1' "$CONFIG_PATH")
+SPK_THRESHOLD=$(jq -r '.speaker_threshold // 0.45' "$CONFIG_PATH")
 PREDICT_INTERVAL=$(jq -r '.predict_interval_seconds // 0.5' "$CONFIG_PATH")
 MID_SENT=$(jq -r '.enable_mid_sentence_detection // true' "$CONFIG_PATH")
 MAX_SAMPLES=$(jq -r '.max_samples // 1000' "$CONFIG_PATH")

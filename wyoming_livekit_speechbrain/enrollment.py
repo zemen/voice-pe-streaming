@@ -1,4 +1,4 @@
-"""Speaker enrollment helpers for SpeechBrain profiles."""
+"""Speaker enrollment helpers (CAM++ by default, SpeechBrain ECAPA optional)."""
 
 from __future__ import annotations
 
@@ -9,15 +9,7 @@ from typing import List, Optional
 
 import numpy as np
 
-try:
-    import torch
-except ImportError:
-    torch = None  # type: ignore[assignment]
-
-try:
-    from speechbrain.inference.speaker import SpeakerRecognition
-except ImportError:
-    SpeakerRecognition = None
+from .speaker_embedding import DEFAULT_SPEAKER_MODEL, SpeakerEmbedder, save_profile
 
 
 def _load_wav_audio(audio_path: Path) -> np.ndarray:
@@ -41,47 +33,22 @@ def _load_wav_audio(audio_path: Path) -> np.ndarray:
 def enroll_speaker(
     audio_paths: List[Path],
     output_profile: Path,
-    model_source: str = "speechbrain/spkrec-ecapa-voxceleb",
+    model_source: str = DEFAULT_SPEAKER_MODEL,
     savedir: Optional[Path] = None,
 ) -> None:
-    """Compute mean ECAPA embedding from enrollment WAV files and save as .npy.
+    """Average the (L2-normalised) speaker embeddings of the enrollment WAVs and save as .npy.
 
-    SpeechBrain ECAPA-TDNN performs sentence-level mean normalization on log-mel
-    features internally (recipe: ``InputNormalization(norm_type='sentence', std_norm=False)``),
-    which analytically cancels constant amplitude gain in the log domain. The
-    pretrained inference path consumes raw 16 kHz mono audio with no waveform
-    normalization step. Pre-normalizing here would add clipping/noise-floor
-    artifacts that break the model's designed gain invariance.
+    Raw 16 kHz mono audio goes in unnormalised: both CAM++ (per-utterance fbank mean removal)
+    and ECAPA (sentence-level mean normalisation) cancel constant gain in the log domain.
+    The backend name is stored next to the profile so a verifier never mixes models.
     """
     if not audio_paths:
         raise ValueError("At least one enrollment audio path is required")
-    if SpeakerRecognition is None or torch is None:
-        raise ImportError("speechbrain not installed")
 
-    model = SpeakerRecognition.from_hparams(
-        source=model_source,
-        savedir=str(savedir) if savedir is not None else None,
-    )
-
-    embeddings = []
-    for audio_path in audio_paths:
-        audio = _load_wav_audio(audio_path)
-        audio_tensor = torch.tensor(audio, dtype=torch.float32)
-        if hasattr(audio_tensor, "reshape"):
-            audio_tensor = audio_tensor.reshape(1, -1)
-        embedding = model.encode_batch(audio_tensor).squeeze(0).squeeze(0)
-        if hasattr(embedding, "detach"):
-            embedding = embedding.detach()
-        if hasattr(embedding, "cpu"):
-            embedding = embedding.cpu()
-        if hasattr(embedding, "numpy"):
-            embeddings.append(embedding.numpy())
-        else:
-            embeddings.append(np.asarray(embedding, dtype=np.float32))
-
+    embedder = SpeakerEmbedder(model_source, savedir)
+    embeddings = [embedder.embed(_load_wav_audio(p)) for p in audio_paths]
     mean_embedding = np.mean(np.stack(embeddings, axis=0), axis=0).astype(np.float32)
-    output_profile.parent.mkdir(parents=True, exist_ok=True)
-    np.save(output_profile, mean_embedding)
+    save_profile(output_profile, mean_embedding, model_source)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -103,14 +70,14 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--speaker-model",
         type=str,
-        default="speechbrain/spkrec-ecapa-voxceleb",
-        help="SpeechBrain model source",
+        default=DEFAULT_SPEAKER_MODEL,
+        help="Speaker embedding model: wespeaker/campplus (default) or a SpeechBrain source",
     )
     parser.add_argument(
         "--speaker-savedir",
         type=Path,
         default=None,
-        help="SpeechBrain model cache directory",
+        help="Speaker model cache directory",
     )
     return parser.parse_args()
 

@@ -3,7 +3,7 @@
 Streaming wake word + **speaker verification** for the **Home Assistant Voice PE**, and LLM
 context so your assistant knows **who is speaking and where**.
 
-- **Add-on**: LiveKit wake word + SpeechBrain ECAPA speaker verification + mid-sentence
+- **Add-on**: LiveKit wake word + CAM++ speaker verification + mid-sentence
   false-positive rejection over the Wyoming protocol, with a web UI for speaker enrollment and
   pipeline debugging.
 - **HACS integration**: `sensor.last_speaker` — who last triggered the wake word, pushed live

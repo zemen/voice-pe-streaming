@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.13.0
+
+- New bundled `sputnik.onnx`, retrained with real household wake-word clips (positives and
+  near-miss negatives from the add-on's sample store) mixed into every training batch, on top
+  of the stock livekit-wakeword synthetic recipe (medium conv-attention, 100k steps). On
+  held-out real recordings it misses far fewer wakes than 0.12.x at a lower false-accept rate.
+  `sputnik_eval.json` is livekit's standard synthetic validation for this model: synthetic
+  recall is lower than 0.12.x because the model is now tuned to real-room audio.
+- Speaker verification now uses **WeSpeaker CAM++** (ONNX, ~7 MB, ~50 ms per check on one
+  thread) instead of SpeechBrain ECAPA. It separates enrolled speakers from pets/birds and
+  other voices noticeably better. Default `speaker_threshold` is 0.45 (CAM++ scale). Enroll from 20+ real wake-word
+  utterances per person (both rooms, different distances): accuracy improves markedly with
+  more enrollment clips; lower to ~0.40 if genuine wakes get rejected.
+- **Re-enroll speakers after upgrading.** ECAPA profiles are ignored (logged) by the CAM++
+  verifier. Profiles now store which model produced them; `--speaker-model
+  speechbrain/spkrec-ecapa-voxceleb` restores the old backend.
+
 ## 0.12.1
 
 - Bundled `sputnik.onnx`: all training metadata (torch export stack traces,

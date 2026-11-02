@@ -1,18 +1,14 @@
-"""Tests for SpeechBrain speaker enrollment helper."""
+"""Tests for the speaker enrollment helper."""
 
-import sys
 import wave
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 
-sys.modules.setdefault("speechbrain", MagicMock())
-sys.modules.setdefault("speechbrain.inference", MagicMock())
-sys.modules.setdefault("speechbrain.inference.speaker", MagicMock())
-
-from wyoming_livekit_speechbrain.enrollment import enroll_speaker  # noqa: E402
+from wyoming_livekit_speechbrain.enrollment import enroll_speaker
+from wyoming_livekit_speechbrain.speaker_embedding import CAMPP, profile_model
 
 
 def _write_test_wav(path: Path, samples: int = 32000) -> None:
@@ -24,38 +20,22 @@ def _write_test_wav(path: Path, samples: int = 32000) -> None:
 
 
 class TestEnrollSpeaker:
-    @patch("wyoming_livekit_speechbrain.enrollment.torch")
-    @patch("wyoming_livekit_speechbrain.enrollment.SpeakerRecognition")
-    def test_enroll_writes_npy(self, mock_sr, mock_torch, tmp_path):
-        wav_a = tmp_path / "a.wav"
-        _write_test_wav(wav_a)
-
-        mock_model = MagicMock()
-        mock_sr.from_hparams.return_value = mock_model
-        mock_torch.tensor.return_value = MagicMock()
-        mock_torch.float32 = "float32"
-
-        embedding = MagicMock()
-        embedding.detach.return_value.cpu.return_value.numpy.return_value = (
-            np.zeros(192, dtype=np.float32)
-        )
-        mock_model.encode_batch.return_value.squeeze.return_value.squeeze.return_value = embedding
+    @patch("wyoming_livekit_speechbrain.enrollment.SpeakerEmbedder")
+    def test_enroll_writes_tagged_npy(self, mock_emb, tmp_path):
+        wavs = []
+        for n in ("a.wav", "b.wav"):
+            _write_test_wav(tmp_path / n)
+            wavs.append(tmp_path / n)
+        mock_emb.return_value.embed.side_effect = [np.ones(512, np.float32), np.zeros(512, np.float32)]
 
         out = tmp_path / "alice.npy"
-        enroll_speaker([wav_a], out)
-        assert out.exists()
+        enroll_speaker(wavs, out)
         loaded = np.load(out)
-        assert loaded.shape == (192,)
+        assert loaded.shape == (512,)
+        assert np.allclose(loaded, 0.5)
+        assert profile_model(out) == CAMPP
+        mock_emb.assert_called_once_with(CAMPP, None)
 
     def test_empty_audio_list_raises(self, tmp_path):
-        out = tmp_path / "x.npy"
         with pytest.raises(ValueError, match="(?i)at least one"):
-            enroll_speaker([], out)
-
-    @patch("wyoming_livekit_speechbrain.enrollment.SpeakerRecognition", None)
-    @patch("wyoming_livekit_speechbrain.enrollment.torch", None)
-    def test_missing_sdk_raises(self, tmp_path):
-        wav_a = tmp_path / "a.wav"
-        _write_test_wav(wav_a)
-        with pytest.raises(ImportError, match="speechbrain not installed"):
-            enroll_speaker([wav_a], tmp_path / "out.npy")
+            enroll_speaker([], tmp_path / "x.npy")

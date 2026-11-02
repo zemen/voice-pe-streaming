@@ -34,6 +34,7 @@ RUN python3 -m pip install --break-system-packages \
         wyoming \
         livekit-wakeword \
         speechbrain \
+        huggingface_hub \
         aiohttp
 RUN python3 -m pip install --break-system-packages --no-deps \
         "git+https://github.com/zemen/voice-pe-streaming@master"

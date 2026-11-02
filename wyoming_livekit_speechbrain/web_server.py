@@ -193,6 +193,7 @@ async def handle_speaker_delete(request: web.Request) -> web.Response:
     if not profile_path.exists():
         raise web.HTTPNotFound(reason=f"No such profile: {name}")
     profile_path.unlink()
+    profile_path.with_suffix(".model").unlink(missing_ok=True)
 
     if ctx.verifier is not None:
         all_npy = sorted(ctx.profiles_dir.glob("*.npy"))
@@ -215,6 +216,8 @@ async def handle_speaker_rename(request: web.Request) -> web.Response:
     if new_path.exists():
         raise web.HTTPConflict(reason=f"Profile already exists: {new_name}")
     old_path.rename(new_path)
+    if old_path.with_suffix(".model").exists():
+        old_path.with_suffix(".model").rename(new_path.with_suffix(".model"))
 
     if ctx.verifier is not None:
         all_npy = sorted(ctx.profiles_dir.glob("*.npy"))

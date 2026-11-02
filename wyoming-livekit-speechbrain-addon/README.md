@@ -1,12 +1,12 @@
 # Wyoming LiveKit + SpeechBrain
 
-Streaming wake word detection via [livekit-wakeword](https://github.com/livekit/livekit-wakeword) plus offline speaker verification via [SpeechBrain ECAPA-TDNN](https://huggingface.co/speechbrain/spkrec-ecapa-voxceleb), exposed over the Wyoming protocol so Home Assistant Voice can use it as a wake word service.
+Streaming wake word detection via [livekit-wakeword](https://github.com/livekit/livekit-wakeword) plus offline speaker verification via [WeSpeaker CAM++](https://huggingface.co/Wespeaker/wespeaker-voxceleb-campplus), exposed over the Wyoming protocol so Home Assistant Voice can use it as a wake word service.
 
 Fully offline once the SpeechBrain model is cached on first run. No access keys, no per-device quota.
 
 ## First-time setup
 
-The add-on bundles the **sputnik** wake word model. On first start, if `/share/wakewords/` contains no models, the bundled `sputnik.onnx` is seeded there automatically. The default sensitivity `0.5` is the model's eval-derived optimal threshold (see `sputnik_eval.json`).
+The add-on bundles the **sputnik** wake word model. On first start, if `/share/wakewords/` contains no models, the bundled `sputnik.onnx` is seeded there automatically. The default sensitivity is `0.5`.
 
 1. Start the add-on. Watch the log for `Wake words: sputnik`.
 2. In Home Assistant: **Settings -> Devices & Services -> Add Integration -> Wyoming Protocol** -> Host: `localhost` (same host) or `homeassistant.local`, Port: `10400`.
@@ -16,7 +16,7 @@ To use different ONNX wake-word classifiers, drop the files into `/share/wakewor
 
 ## Speaker verification (optional)
 
-1. Enroll each speaker by computing an ECAPA embedding from one or more 16 kHz mono 16-bit WAV samples. From a host with `livekit-wakeword`'s package installed:
+1. Enroll each speaker by computing a speaker embedding from one or more 16 kHz mono 16-bit WAV samples. From a host with `livekit-wakeword`'s package installed:
    ```bash
    python -m wyoming_livekit_speechbrain.enrollment \
      --name alice \
@@ -28,7 +28,7 @@ To use different ONNX wake-word classifiers, drop the files into `/share/wakewor
    enable_speaker_verification: true
    speaker_profiles:
      - /share/profiles/alice.npy
-   speaker_threshold: 0.25   # cosine similarity, raise for stricter match
+   speaker_threshold: 0.45   # cosine similarity, raise for stricter match
    ```
 3. Restart. Detection events now carry a `speaker` field with the matched profile name (`alice`).
 
@@ -45,22 +45,22 @@ When speaker verification is enabled, the server compares the speaker before and
 | `sensitivity` | `0.5` | Detection threshold 0.0-1.0, applied to every wake-word model. Default matches the bundled model's eval-derived optimal threshold. Same value applies to all wake words; for per-model sensitivity, invoke the addon manually with repeated `--sensitivity` flags. |
 | `save_sample_threshold` | `0.25` | Second, lower threshold (0.0-1.0 or omit/null to disable). When the classifier scores in `[save_sample_threshold, sensitivity)`, the 2 s window is persisted to the sample store with `source="auto-below-threshold"` WITHOUT firing a detection. Mines hard negatives + quiet TPs near the decision boundary for fine-tuning. Lower = more captures + more storage + more manual labeling. Default 0.25 is conservative on a trained sputnik model. |
 | `predict_interval_seconds` | `0.5` | Minimum seconds between `WakeWordModel.predict()` calls. Lower = lower detection latency, higher CPU. `0.0` disables throttling (predict on every 80 ms frame ≈ 12 calls/sec). |
-| `enable_speaker_verification` | `false` | Toggle SpeechBrain ECAPA verification. |
-| `speaker_profiles` | `[]` | Paths to `.npy` ECAPA embeddings under `/share/`. |
-| `speaker_threshold` | `0.25` | Cosine similarity threshold. |
-| `speaker_model` | `speechbrain/spkrec-ecapa-voxceleb` | HuggingFace model id. |
+| `enable_speaker_verification` | `false` | Toggle speaker verification (WeSpeaker CAM++). |
+| `speaker_profiles` | `[]` | Paths to `.npy` speaker embeddings under `/share/`. |
+| `speaker_threshold` | `0.45` | Cosine similarity threshold (CAM++ scale; re-tune if you switch to ECAPA). |
+| `speaker_model` | `wespeaker/campplus` | Speaker embedding backend (`speechbrain/spkrec-ecapa-voxceleb` for the legacy ECAPA). |
 | `enable_mid_sentence_detection` | `true` | Reject WW when same speaker before AND during. |
 | `debug_logging` | `false` | `--debug` flag for the Wyoming server. |
 
 ## First boot caches the SpeechBrain model
 
-The first start downloads `speechbrain/spkrec-ecapa-voxceleb` (~17 MB) into `/data/speechbrain/`. This persists across container restarts. Subsequent starts are fully offline.
+The first start downloads the WeSpeaker CAM++ ONNX model (~28 MB) into `/data/speechbrain/`. This persists across container restarts. Subsequent starts are fully offline.
 
 ## Web UI
 
 The add-on exposes a web UI via HA Ingress. Click "Wake Word" in the HA sidebar (icon: account-voice) to open it. Three tabs:
 
-- **Enroll** — Record speaker samples from your browser mic or from a selected Voice PE device, compute an ECAPA embedding, save as a profile under `/share/profiles/`. List, rename, re-enroll, delete existing profiles. Verify a fresh recording against enrolled speakers and see per-speaker cosine similarity scores.
+- **Enroll** — Record speaker samples from your browser mic or from a selected Voice PE device, compute a CAM++ embedding, save as a profile under `/share/profiles/`. List, rename, re-enroll, delete existing profiles. Verify a fresh recording against enrolled speakers and see per-speaker cosine similarity scores.
 - **Debug** — Open two WebSocket streams to the add-on: one renders a live wake-word score chart, the other panels speaker verification + mid-sentence rejection + a trigger log. Useful to watch the pipeline run in real time and understand why detections fire or don't.
 - **Samples** — Every wake-word trigger is automatically captured as a 2-second WAV. Browse them with inline playback, mark each as False Positive or True Positive, retest against the current detector ("would this still trigger after I lowered the threshold?"), or download all FPs as a ZIP. Also has a "Capture from Voice PE" panel that records arbitrary audio from a selected active Voice PE session for fine-tuning data collection.
 

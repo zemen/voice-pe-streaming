@@ -49,6 +49,7 @@ from .events import DetectionEventBus
 from .handler import LiveKitEventHandler
 from .livekit_detector import LiveKitDetector, LiveKitDetectorConfig
 from .sample_store import DEFAULT_MAX_SAMPLES, DEFAULT_SAMPLES_DIR, SampleStore
+from .speaker_embedding import DEFAULT_SPEAKER_MODEL
 from .speechbrain_verifier import SpeechBrainConfig, SpeechBrainVerifier
 from .web_server import DEFAULT_PROFILES_DIR, WebServerContext, run_web_server
 
@@ -119,20 +120,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--speaker-threshold",
         type=float,
-        default=0.25,
-        help="SpeechBrain cosine similarity threshold (default: 0.25)",
+        default=0.45,
+        help="Speaker cosine similarity threshold (default: 0.45, tuned for CAM++)",
     )
     parser.add_argument(
         "--speaker-model",
         type=str,
-        default="speechbrain/spkrec-ecapa-voxceleb",
-        help="SpeechBrain model source",
+        default=DEFAULT_SPEAKER_MODEL,
+        help="Speaker embedding model: wespeaker/campplus (default) or speechbrain/spkrec-ecapa-voxceleb",
     )
     parser.add_argument(
         "--speaker-savedir",
         type=str,
         default=None,
-        help="SpeechBrain model cache directory",
+        help="Speaker model cache directory",
     )
     parser.add_argument(
         "--mid-sentence-detection",
